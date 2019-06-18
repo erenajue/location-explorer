@@ -1,0 +1,33 @@
+spring:
+  application:
+    name: location-explorer
+  #Database
+  datasource:
+    url: jdbc:postgresql://10.20.45.24:5432/pss_sensorservice # Change fixed ip
+    platform: postgres
+    username: CHANGEME
+    password: CHANGEME
+    driver-class-name: org.postgresql.Driver
+    #data: classpath:data.sql
+  jpa:
+    database: postgresql # Use postgres database
+    show_sql: true # Log any SQL action performed by service
+    hibernate:
+      ddl-auto: update # Create database when application starts
+      use-new-id-generator-mappings: true
+# https://stackoverflow.com/questions/23850585/how-to-start-spring-boot-app-without-depending-on-database/23852903#23852903
+    properties:
+      hibernate:
+        temp:
+          use_jdbc_metadata_defaults: false
+  # Jackson parsing rules
+  jackson:
+    default-property-inclusion: non_null
+
+server:
+  address: localhost
+  servlet:
+    context-path: /locationexplorer
+  port: 8080
+  compression:
+    enabled: false
