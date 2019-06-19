@@ -38,7 +38,7 @@ public class GpsJumpsFilterAlgorithm<E extends Localizable> {
         // add last loc anyway
         dtoLocationValuesFiltered.add(sortedLocValues.get(sortedLocValues.size() - 1));
         log.warn("Filtered {} locations as GPS jumps in {} ms, now {} locations remaining for further process",
-                timer.elapsedMsecs(), locValues.size() - dtoLocationValuesFiltered.size(), dtoLocationValuesFiltered.size()); // filterBadAccuracyIfRecentLocationPresent
+                locValues.size() - dtoLocationValuesFiltered.size(), timer.elapsedMsecs(), dtoLocationValuesFiltered.size()); // filterBadAccuracyIfRecentLocationPresent
         return dtoLocationValuesFiltered;
     }
 
