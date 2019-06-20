@@ -112,23 +112,25 @@ public class GPSTrack implements Traceable {
                 .average();
     }
 
-    public FeatureCollection toGeoJsonTrack() {
-
-        return (FeatureCollection) toGeoJsonObject();
-    }
-
     @Override
     public GeoJsonObject toGeoJsonObject() {
 
         final FeatureCollection features = new FeatureCollection();
-        features.addAll(asPointFeature());
         features.add(asLineStringFeature());
         return features;
     }
 
     @Override
     public String asGeoJsonString() throws JsonProcessingException {
-        final FeatureCollection geoJsonTrack = this.toGeoJsonTrack();
+        final FeatureCollection geoJsonTrack = (FeatureCollection) this.toGeoJsonObject();
+        return new ObjectMapper().writeValueAsString(geoJsonTrack);
+    }
+
+    public String asGeoJsonString(final boolean isPointsIncluded) throws JsonProcessingException {
+        final FeatureCollection geoJsonTrack = (FeatureCollection) this.toGeoJsonObject();
+        if(isPointsIncluded) {
+            geoJsonTrack.addAll(asPointFeature());
+        }
         return new ObjectMapper().writeValueAsString(geoJsonTrack);
     }
 

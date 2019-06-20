@@ -23,7 +23,9 @@ public class LocationExplorerController {
                                           @RequestParam(value = "startDate", required = false, defaultValue = "0") final Long startDate,
                                           @RequestParam(value = "endDate", required = false, defaultValue = "0") final Long endDate,
                                           @RequestParam(value = "isOptimized", required = false, defaultValue = "true") final boolean isPathOptimizerEnabled,
-                                          @RequestParam(value = "isGpsJumpFiltered", required = false, defaultValue = "true") final boolean isGpsJumpFilterEnabled) throws Exception {
-        return service.convert(unitId, missionId, outputFormat, startDate, endDate, isPathOptimizerEnabled, isGpsJumpFilterEnabled);
+                                          @RequestParam(value = "optimizationCoefficient", required = false, defaultValue = "3") final int optimizationCoefficient,
+                                          @RequestParam(value = "isGpsJumpFiltered", required = false, defaultValue = "true") final boolean isGpsJumpFilterEnabled,
+                                          @RequestParam(value = "isWayPointIncluded", required = false, defaultValue = "false") final boolean isWayPointIncluded) throws Exception {
+        return service.convert(unitId, missionId, outputFormat, startDate, endDate, isPathOptimizerEnabled, optimizationCoefficient, isGpsJumpFilterEnabled, isWayPointIncluded);
     }
 }

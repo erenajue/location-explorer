@@ -34,8 +34,8 @@ public class LocationExplorerService {
      *
      * @return a string version of the produced geojson
      */
-    @Transactional(readOnly = true)
-    public String convert(final String userId, final String missionId, final String outputFormat, final Long startDateMillis, final Long endDateMillis, final boolean isPathOptimizerEnabled, final boolean isGpsJumpFilterEnabled) throws Exception {
+    @Transactional(readOnly = true) // TODO: Regroup all of these filter parameters in an object
+    public String convert(final String userId, final String missionId, final String outputFormat, final Long startDateMillis, final Long endDateMillis, final boolean isPathOptimizerEnabled, final int optimizationCoefficient, final boolean isGpsJumpFilterEnabled, final boolean isWayPointIncluded) throws Exception {
 
         final LocalDateTime startDateTime = setStartTimeFromParam(startDateMillis);
         final LocalDateTime endDateTime = setStopTimeFromParam(endDateMillis);
@@ -43,14 +43,14 @@ public class LocationExplorerService {
 
         final List<UnitLocationMeasurement> locations = repository.findByIdTimeAfterAndIdTimeBeforeAndIdUnitIdAndIdMissionId(startDateTime, endDateTime, userId, missionId);
 
-        final GPSTrack gpsTrack = loadGpsTrackForUserWithOptimizationParameters(userId, locations, isPathOptimizerEnabled, isGpsJumpFilterEnabled);
+        final GPSTrack gpsTrack = loadGpsTrackForUserWithOptimizationParameters(userId, locations, isPathOptimizerEnabled, optimizationCoefficient, isGpsJumpFilterEnabled);
         final LocationOutputFormat format = loadLocationOutputFormatFromParam(outputFormat);
         switch (format) {
             default:
             case GEOJSON:
                 final CustomTimer timerGeoJsonOperation = new CustomTimer();
                 log.info("Start GEOJSON transformation...");
-                final String geojson = gpsTrack.asGeoJsonString();
+                final String geojson = gpsTrack.asGeoJsonString(isWayPointIncluded); // Refactor more intelligently
                 log.info("Processed {} location points to GEOJSON format in {} ms!", gpsTrack.size(), timerGeoJsonOperation.elapsedMsecs());
                 return geojson;
 
@@ -63,11 +63,11 @@ public class LocationExplorerService {
         }
     }
 
-    private List<GPSPoint> optimizePath(final List<GPSPoint> points, final Boolean isPathOptimizerEnabled) {
+    private List<GPSPoint> optimizePath(final List<GPSPoint> points, final Boolean isPathOptimizerEnabled, final int optimizationCoefficient) {
         log.info("Path optimization {}!", isPathOptimizerEnabled ? "enabled" : "disabled");
         if (isPathOptimizerEnabled) {
             log.trace("Processing {} points with Ramer-Douglas-Peucker algorithm", points.size());
-            final RamerDouglasPeuckerAlgorithm<GPSPoint> rdp = new RamerDouglasPeuckerAlgorithm<>();
+            final RamerDouglasPeuckerAlgorithm<GPSPoint> rdp = new RamerDouglasPeuckerAlgorithm<>(optimizationCoefficient); // TODO: Static call?
             return rdp.getOptimizedPath(points);
         } else return points; // do nothing
     }
@@ -108,7 +108,7 @@ public class LocationExplorerService {
         return format;
     }
 
-    private GPSTrack loadGpsTrackForUserWithOptimizationParameters(final String userId, final List<UnitLocationMeasurement> locations, final boolean isPathOptimizerEnabled, final boolean isGpsJumpFilterEnabled) {
+    private GPSTrack loadGpsTrackForUserWithOptimizationParameters(final String userId, final List<UnitLocationMeasurement> locations, final boolean isPathOptimizerEnabled, final int optimizationCoefficient, final boolean isGpsJumpFilterEnabled) {
         final List<GPSPoint> points = locations.parallelStream()
                 .map(this::map)
                 .sorted(GPSPoint::compareTo)
@@ -122,7 +122,7 @@ public class LocationExplorerService {
         return GPSTrack.builder()
                 .trackedUser(userId)
                 .trackingDevicesIds(trackingDevicesIds)
-                .track(filterGpsJumps(optimizePath(points, isPathOptimizerEnabled), isGpsJumpFilterEnabled))
+                .track(filterGpsJumps(optimizePath(points, isPathOptimizerEnabled, optimizationCoefficient), isGpsJumpFilterEnabled))
                 .build();
     }
 

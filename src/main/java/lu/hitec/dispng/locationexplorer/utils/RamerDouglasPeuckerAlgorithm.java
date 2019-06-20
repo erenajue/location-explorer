@@ -4,17 +4,22 @@ import lombok.extern.slf4j.Slf4j;
 import lu.hitec.dispng.locationexplorer.basis.Localizable;
 
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.List;
 
 @Slf4j
 public class RamerDouglasPeuckerAlgorithm<E extends Localizable> {
 
-    private static final int EPSILON_ADJUSTMENTS = 10; // TODO: Use this as configuration parameter for more precise tracks
+    // private static final int EPSILON_ADJUSTMENTS = 3; // TODO: Use this as configuration parameter for more precise tracks
+
+    private int optimizationCoefficient;
+
+    public RamerDouglasPeuckerAlgorithm(final int optimizationCoefficient) {
+        this.optimizationCoefficient = optimizationCoefficient;
+    }
 
     public List<E> getOptimizedPath(final List<E> allPoints) {
         final List<E> optimizedPathPoints = getOptimizedPath(allPoints, calculateAccurateEpsilon(allPoints));
-        log.info("Shortened path from {} points down to {} points for optimization", allPoints.size(), optimizedPathPoints.size());
+        log.info("Shortened path from {} points down to {} points for optimization using epsilon coefficient '{}'", allPoints.size(), optimizedPathPoints.size(), this.optimizationCoefficient);
         return optimizedPathPoints;
     }
 
@@ -51,7 +56,7 @@ public class RamerDouglasPeuckerAlgorithm<E extends Localizable> {
             final List<E> secondHalfReturn = getOptimizedPath(secondHalf, tolerance);
 
             returnedValue.addAll(firstHalfReturn);
-            // removing the first element to avoid 2 occurence of the farthestPoint
+            // removing the first element to avoid 2 occurrence of the farthestPoint
             if (!secondHalfReturn.isEmpty()) {
                 secondHalfReturn.remove(0);
             }
@@ -64,16 +69,16 @@ public class RamerDouglasPeuckerAlgorithm<E extends Localizable> {
         }
         return returnedValue;
     }
-
-    public static <E extends Localizable> double calculateAccurateEpsilon(final E[] allPoints) {
-        log.debug("about to calculateAccurateEpsilon");
-        if ((allPoints == null) || (allPoints.length == 0)) {
-            return 0;
+    /*
+        private <E extends Localizable> double calculateAccurateEpsilon(final E[] allPoints) {
+            log.debug("about to calculateAccurateEpsilon");
+            if ((allPoints == null) || (allPoints.length == 0)) {
+                return 0;
+            }
+            return calculateAccurateEpsilon(Arrays.asList(allPoints));
         }
-        return calculateAccurateEpsilon(Arrays.asList(allPoints));
-    }
-
-    public static <E extends Localizable> double calculateAccurateEpsilon(final List<E> allPoints) {
+    */
+    private <E extends Localizable> double calculateAccurateEpsilon(final List<E> allPoints) {
         log.debug("about to calculateAccurateEpsilon");
         if (allPoints.size() == 0) {
             return 0;
@@ -94,6 +99,6 @@ public class RamerDouglasPeuckerAlgorithm<E extends Localizable> {
             }
             allDistancesSum += distanceBetweenPoints;
         }
-        return allDistancesSum / (allPoints.size() * EPSILON_ADJUSTMENTS);
+        return allDistancesSum / (allPoints.size() * this.optimizationCoefficient);
     }
 }
