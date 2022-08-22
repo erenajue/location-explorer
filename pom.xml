@@ -19,6 +19,10 @@
     <properties>
         <java.version>1.8</java.version>
         <swagger.version>2.9.2</swagger.version>
+        <lombok.version>1.18.8</lombok.version>
+        <jenetics.version>1.2.3</jenetics.version>
+        <geojson-jackson.version>1.8.1</geojson-jackson.version>
+        <common-math.version>3.6.1</common-math.version>
     </properties>
 
     <dependencies>
@@ -40,7 +44,7 @@
         <dependency>
             <groupId>org.projectlombok</groupId>
             <artifactId>lombok</artifactId>
-            <version>1.18.8</version>
+            <version>${lombok.version}</version>
             <optional>true</optional>
         </dependency>
 
@@ -53,19 +57,19 @@
         <dependency>
             <groupId>io.jenetics</groupId>
             <artifactId>jpx</artifactId>
-            <version>1.2.3</version>
+            <version>${jenetics.version}</version>
         </dependency>
 
         <dependency>
             <groupId>de.grundid.opendatalab</groupId>
             <artifactId>geojson-jackson</artifactId>
-            <version>1.8.1</version>
+            <version>${geojson-jackson.version}</version>
         </dependency>
 
         <dependency>
             <groupId>org.apache.commons</groupId>
             <artifactId>commons-math3</artifactId>
-            <version>3.6.1</version>
+            <version>${common-math.version}</version>
         </dependency>
 
         <dependency>

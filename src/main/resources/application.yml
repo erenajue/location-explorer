@@ -1,6 +1,23 @@
 spring:
   application:
     name: location-explorer
+
+  # Jackson parsing rules
+  jackson:
+    default-property-inclusion: non_null
+
+server:
+  address: localhost
+  servlet:
+    context-path: /locationexplorer
+  port: 8080
+  compression:
+    enabled: false
+
+---
+spring:
+  profiles: postgres
+
   #Database
   datasource:
     url: jdbc:postgresql://10.20.45.24:5432/pss_sensorservice # Change fixed ip
@@ -15,19 +32,15 @@ spring:
     hibernate:
       ddl-auto: update # Create database when application starts
       use-new-id-generator-mappings: true
-# https://stackoverflow.com/questions/23850585/how-to-start-spring-boot-app-without-depending-on-database/23852903#23852903
+    # https://stackoverflow.com/questions/23850585/how-to-start-spring-boot-app-without-depending-on-database/23852903#23852903
     properties:
       hibernate:
         temp:
           use_jdbc_metadata_defaults: false
-  # Jackson parsing rules
-  jackson:
-    default-property-inclusion: non_null
 
-server:
-  address: localhost
-  servlet:
-    context-path: /locationexplorer
-  port: 8080
-  compression:
-    enabled: false
+---
+spring:
+  profiles: arango
+
+  # Arango
+
