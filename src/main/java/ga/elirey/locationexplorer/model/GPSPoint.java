@@ -17,6 +17,7 @@ import java.time.ZoneId;
 import java.time.format.DateTimeFormatter;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.Objects;
 import java.util.UUID;
 
 @Getter
@@ -113,5 +114,26 @@ public class GPSPoint implements Localizable, Comparable<GPSPoint> {
 
     public int compareTo(GPSPoint otherPoint) {
         return this.timestamp.compareTo(otherPoint.timestamp);
+    }
+
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (o == null || getClass() != o.getClass()) return false;
+        GPSPoint gpsPoint = (GPSPoint) o;
+        return Double.compare(gpsPoint.latitude, latitude) == 0
+                && Double.compare(gpsPoint.longitude, longitude) == 0
+                && Double.compare(gpsPoint.altitude, altitude) == 0
+                && Double.compare(gpsPoint.speed, speed) == 0
+                && Double.compare(gpsPoint.heading, heading) == 0
+                && Double.compare(gpsPoint.accuracy, accuracy) == 0
+                && unitId.equals(gpsPoint.unitId)
+                && collectorId.equals(gpsPoint.collectorId)
+                && timestamp.equals(gpsPoint.timestamp);
+    }
+
+    @Override
+    public int hashCode() {
+        return Objects.hash(unitId, collectorId, timestamp, latitude, longitude, altitude, speed, heading, accuracy);
     }
 }

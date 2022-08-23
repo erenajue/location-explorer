@@ -1,13 +1,15 @@
 package ga.elirey.locationexplorer.utils;
 
-import lombok.extern.slf4j.Slf4j;
 import ga.elirey.locationexplorer.basis.Localizable;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.util.CollectionUtils;
 
 import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.List;
 import java.util.stream.Collectors;
+
+import static ga.elirey.locationexplorer.utils.GeometryTools.distanceInMeters;
 
 @Slf4j
 public class GpsJumpsFilterAlgorithm<E extends Localizable> implements AlgorithmExecutor<E>{
@@ -50,7 +52,6 @@ public class GpsJumpsFilterAlgorithm<E extends Localizable> implements Algorithm
     }
 
     /**
-     * TODO: Move this part in geometry tools class
      * Filter jumps between 3 locations.
      * Sudden change of direction identified by a jump to one direction followed
      * by a return jump near to the first location. To identify it we consider a triangle formed by L1, L2, L3 and
@@ -62,50 +63,13 @@ public class GpsJumpsFilterAlgorithm<E extends Localizable> implements Algorithm
      * @param dtoLocationValueNext3      the next value
      */
     private void addIfNoJump(final List<E> dtoLocationValuesFiltered,
-                             final E dtoLocationValuePrecedent1, final E dtoLocationValue2,
-                             final E dtoLocationValueNext3) {
+                                   final E dtoLocationValuePrecedent1, final E dtoLocationValue2,
+                                   final E dtoLocationValueNext3) {
         final double distanceL1L2 = distanceInMeters(dtoLocationValuePrecedent1, dtoLocationValue2);
         final double distanceL2L3 = distanceInMeters(dtoLocationValue2, dtoLocationValueNext3);
         final double distanceL1L3 = distanceInMeters(dtoLocationValuePrecedent1, dtoLocationValueNext3);
         if ((distanceL1L2 < distanceL1L3) && (distanceL2L3 < distanceL1L3)) {
             dtoLocationValuesFiltered.add(dtoLocationValue2);
         }
-    }
-
-    /**
-     * TODO: Move this part in geometry tools class
-     * Calculate distance between two points in latitude and longitude taking
-     * into account height difference. If you are not interested in height
-     * difference pass 0.0. Uses Haversine method as its base.
-     * <p>
-     * lat1, lon1 Start point lat2, lon2 End point el1 Start altitude in meters
-     * el2 End altitude in meters
-     *
-     * @return Distance in Meters
-     */
-    private static double distanceInMeters(final double lat1, final double lat2, final double lon1, final double lon2,
-                                           final Double el1, final Double el2) {
-
-        final int R = 6371; // Radius of the earth in kilometers
-
-        final double latDistance = Math.toRadians(lat2 - lat1);
-        final double lonDistance = Math.toRadians(lon2 - lon1);
-        final double a = (Math.sin(latDistance / 2) * Math.sin(latDistance / 2))
-                + (Math.cos(Math.toRadians(lat1)) * Math.cos(Math.toRadians(lat2)) * Math.sin(lonDistance / 2) * Math.sin(lonDistance / 2));
-        final double c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
-        final double distance = R * c * 1000; // convert to meters
-
-        if ((el1 != null) && (el2 != null)) {
-            final double height = el1 - el2;
-            final double distanceWithHeight = Math.pow(distance, 2) + Math.pow(height, 2);
-            return Math.sqrt(distanceWithHeight);
-        }
-        return distance;
-    }
-
-    // TODO: Move to geometry tools?
-    private double distanceInMeters(final E loc1, final E loc2) {
-        return distanceInMeters(loc1.getLatitude(), loc2.getLatitude(), loc1.getLongitude(), loc2.getLongitude(),
-                loc1.getAltitude(), loc2.getAltitude());
     }
 }

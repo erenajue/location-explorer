@@ -1,66 +1,17 @@
 package ga.elirey.locationexplorer.utils;
 
 import ga.elirey.locationexplorer.basis.Localizable;
-
+import lombok.experimental.UtilityClass;
+@UtilityClass
 public final class GeometryTools {
 
-    private static final double DELTA = 0.0001;
+    private static final double LOCALIZABLE_DELTA_CONSIDERATION = 0.0001;
 
-    private static final String KILOMETERS = "K";
+    private static final String KILOMETERS_UNIT = "K";
 
-    private static final String MILES = "M";
-
-    private GeometryTools() {
-    }
-
-    /**
-     * to check that a point is on one side of a line, we check if it is on the same side than another point we consider to be on the good
-     * side
-     *
-     * @param pointToBeTested tested point
-     * @param comparisonPoint point of comparison
-     * @param firstPointOfLine first point of the straight line assumed to join both the tested dans compared point
-     * @param secondPointOfLine second point of the straight line assumed to join both the tested dans compared point
-     * @return true if points are on the same side of line
-     */
-    public static boolean arePointsOnTheSameSideOfLine(final Localizable pointToBeTested, final Localizable comparisonPoint,
-                                                       final Localizable firstPointOfLine, final Localizable secondPointOfLine) {
-        final boolean pointIsAbove = isPointAboveLine(pointToBeTested, firstPointOfLine, secondPointOfLine);
-        final boolean comparisonPointIsAbove = isPointAboveLine(comparisonPoint, firstPointOfLine, secondPointOfLine);
-
-        return pointIsAbove == comparisonPointIsAbove;
-    }
 
     public static boolean equals(final Localizable p1, final Localizable p2) {
         return equals(p1.getLatitude(), p2.getLatitude()) && equals(p1.getLongitude(), p2.getLongitude());
-    }
-
-    /**
-     * gets the longitude of the point of crossing between a segment and an horizontal line Segment is determined by its 2 extremities Line is
-     * determined by its latitude
-     * relevant only if rayCastingTestForSegment is true for the same values
-     *
-     * @param firstLocation
-     * @param secondLocation
-     * @param referenceLatitude
-     * @return the longitude of the crossing point if exists, null otherwise
-     */
-    public static Double findCrossingLongitude(final Localizable firstLocation, final Localizable secondLocation,
-                                               final double referenceLatitude) {
-        if (rayCastingTestForSegment(firstLocation, secondLocation, referenceLatitude)) {
-            if (equals(firstLocation.getLatitude(), secondLocation.getLatitude())) {
-                return firstLocation.getLongitude();
-            }
-
-            final double latDif = firstLocation.getLatitude() - secondLocation.getLatitude();
-            final double lngDif = firstLocation.getLongitude() - secondLocation.getLongitude();
-            final double latOffset = firstLocation.getLatitude() - referenceLatitude;
-
-            final double offset = latOffset / latDif;
-
-            return firstLocation.getLongitude() - (lngDif * offset);
-        }
-        return null;
     }
 
     public static double getDistanceBetweenPoints(final Localizable point1, final Localizable point2) {
@@ -74,20 +25,16 @@ public final class GeometryTools {
     }
 
     public static double getDistanceBetweenPointsInMeters(final Localizable p1, final Localizable p2) {
-        return getDistanceBetweenPoints(p1, p2, KILOMETERS) * 1000;
-    }
-
-    public static double getDistanceBetweenPointsInMiles(final Localizable p1, final Localizable p2) {
-        return getDistanceBetweenPoints(p1, p2, MILES);
+        return getDistanceBetweenPoints(p1, p2, KILOMETERS_UNIT) * 1000;
     }
 
     /**
      * please note this does not return a distance in meters (or miles) but instead a Lat/lng like distance, which can not reliably be
-     * converted in a accurate real spherical distance
+     * converted in an accurate real spherical distance
      *
-     * @param pointToBeTested
-     * @param firstPointOfLine
-     * @param secondPointOfLine
+     * @param pointToBeTested point to evaluate
+     * @param firstPointOfLine line's entry point
+     * @param secondPointOfLine line's exit point
      * @return orthogonal distance between point and line
      */
     public static double getOrthogonalDistanceBetweenPointAndLine(final Localizable pointToBeTested,
@@ -111,117 +58,21 @@ public final class GeometryTools {
     }
 
     /**
-     * 2D geometry tests if a point is "above" or "below" a line defined by 2 other points above means more on the North and/or on the West of
-     * the line this is an arbitrary statement
-     * that has only a value for comparison Lng and Lat are considered as (x, y) values of a point in a pseudo-euclidian plane we determine a
-     * function f(x) = Ax + B and return true
-     * if y' >= Ax' + B, for the tested point (x', y')
-     *
-     * @param pointToBeTested
-     * @param firstPointOfLine
-     * @param secondPointOfLine
-     * @return true if the point is above the line
-     */
-    public static boolean isPointAboveLine(final Localizable pointToBeTested, final Localizable firstPointOfLine,
-                                           final Localizable secondPointOfLine) {
-        Localizable leftPoint;
-        Localizable rightPoint;
-
-        if (firstPointOfLine.getLongitude() < secondPointOfLine.getLongitude()) {
-            leftPoint = firstPointOfLine;
-            rightPoint = secondPointOfLine;
-        } else if (firstPointOfLine.getLongitude() > secondPointOfLine.getLongitude()) {
-            rightPoint = firstPointOfLine;
-            leftPoint = secondPointOfLine;
-        } else if (firstPointOfLine.getLatitude() < secondPointOfLine.getLatitude()) {
-            leftPoint = firstPointOfLine;
-            rightPoint = secondPointOfLine;
-        } else {
-            rightPoint = firstPointOfLine;
-            leftPoint = secondPointOfLine;
-        }
-
-        final double xDiff = rightPoint.getLongitude() - leftPoint.getLongitude();
-        final double yDiff = rightPoint.getLatitude() - leftPoint.getLatitude();
-        final double aFactor = yDiff / xDiff;
-
-        final double lngDist = pointToBeTested.getLongitude() - leftPoint.getLongitude();
-        final double latDist = pointToBeTested.getLatitude() - leftPoint.getLatitude();
-        return latDist > (lngDist * aFactor);
-    }
-
-    public static boolean pointsOnSameLatitude(final Localizable firstLocation, final Localizable secondLocation) {
-        return (firstLocation != null) && (secondLocation != null) && equals(firstLocation.getLatitude(), secondLocation.getLatitude());
-    }
-
-    /**
-     * tests if a segment has a point that crosses the horizontal line determined by its latitude
-     *
-     * @param firstLocation the first point of the segment
-     * @param secondLocation the second point of the segment
-     * @param referenceLatitude the latitude of the line
-     */
-    public static boolean rayCastingTestForSegment(final Localizable firstLocation, final Localizable secondLocation,
-                                                   final double referenceLatitude) {
-        if ((firstLocation == null) || (secondLocation == null)) {
-            return false;
-        }
-        // true if one of the points is exactly at this latitude
-        if (equals(firstLocation.getLatitude(), referenceLatitude) || equals(secondLocation.getLatitude(), referenceLatitude)) {
-            return true;
-        }
-
-        // true if one of the points above, AND the other below
-        if ((firstLocation.getLatitude() > referenceLatitude) && (secondLocation.getLatitude() < referenceLatitude)) {
-            return true;
-        }
-        return (firstLocation.getLatitude() < referenceLatitude) && (secondLocation.getLatitude() > referenceLatitude);
-
-        // false otherwise (both points above, or both below)
-    }
-
-    /**
-     * tests if a segment has a point that crosses the horizontal semi-line determined by the tested point latitude true if the segment as a
-     * point at the same latitude than the
-     * tested point , and that this point longitude is greater than the tested point longitude
-     *
-     * To deal with a bug if a vertex is the crossing point, true is returned only if the other point is below the tested point
-     *
-     * @param firstLocation the first point of the segment
-     * @param secondLocation the second point of the segment
-     * @param testedPoint the point to test
-     */
-    public static boolean uniDirectionalRayCastingTestForSegment(final Localizable firstLocation, final Localizable secondLocation,
-                                                                 final Localizable testedPoint) {
-        if ((firstLocation == null) || (secondLocation == null)) {
-            return false;
-        }
-
-        // dealing with the unlucky case of the 3 points aligned horizontaly
-        if (pointsOnSameLatitude(firstLocation, testedPoint) || pointsOnSameLatitude(secondLocation, testedPoint)) {
-            return (firstLocation.getLatitude() < testedPoint.getLatitude()) || (secondLocation.getLatitude() < testedPoint.getLatitude());
-        }
-
-        final Double crossingLongitude = findCrossingLongitude(firstLocation, secondLocation, testedPoint.getLatitude());
-        return (crossingLongitude != null) && ((crossingLongitude > testedPoint.getLongitude()) || equals(crossingLongitude, testedPoint.getLongitude()));
-    }
-
-    /**
      * Converts the value from Degrees to radians
      *
      * @param deg the angle's degrees value
      * @return value in radians
      */
-    private static double deg2rad(final double deg) {
+    public static double deg2rad(final double deg) {
         return (deg * Math.PI) / 180.0;
     }
 
     private static boolean equals(final double d1, final double d2) {
-        return d1 == d2 || Math.abs(d1 - d2) < DELTA;
+        return d1 == d2 || Math.abs(d1 - d2) < LOCALIZABLE_DELTA_CONSIDERATION;
 
     }
 
-    private static double getDistanceBetweenPoints(final Localizable p1, final Localizable p2, final String unit) {
+    public static double getDistanceBetweenPoints(final Localizable p1, final Localizable p2, final String unit) {
         final double theta = p1.getLongitude() - p2.getLongitude();
         final double dist1 = Math.sin(deg2rad(p1.getLatitude())) * Math.sin(deg2rad(p2.getLatitude()));
         final double dist2 = Math.cos(deg2rad(p1.getLatitude())) * Math.cos(deg2rad(p2.getLatitude())) * Math.cos(deg2rad(theta));
@@ -243,8 +94,48 @@ public final class GeometryTools {
      * @param rad the angle radian value
      * @return value in degrees
      */
-    private static double rad2deg(final double rad) {
+    public static double rad2deg(final double rad) {
         return (rad * 180.0) / Math.PI;
     }
 
+    /**
+     * Calculate distance between two points in latitude and longitude taking
+     * into account height difference. If you are not interested in height
+     * difference pass 0.0. Uses Haversine method as its base.
+     * <p>
+     * lat1, lon1 Start point lat2, lon2 Localizable end point el1 Start altitude in meters
+     * el2 Localizable end altitude in meters
+     *
+     * @return Distance in Meters
+     */
+    private static double distanceInMeters(final double lat1, final double lat2, final double lon1, final double lon2,
+                                           final Double el1, final Double el2) {
+
+        final int R = 6371; // Radius of the earth in kilometers
+
+        final double latDistance = Math.toRadians(lat2 - lat1);
+        final double lonDistance = Math.toRadians(lon2 - lon1);
+        final double a = (Math.sin(latDistance / 2) * Math.sin(latDistance / 2))
+                + (Math.cos(Math.toRadians(lat1)) * Math.cos(Math.toRadians(lat2)) * Math.sin(lonDistance / 2) * Math.sin(lonDistance / 2));
+        final double c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+        final double distance = R * c * 1000; // convert to meters
+
+        if ((el1 != null) && (el2 != null)) {
+            final double height = el1 - el2;
+            final double distanceWithHeight = Math.pow(distance, 2) + Math.pow(height, 2);
+            return Math.sqrt(distanceWithHeight);
+        }
+        return distance;
+    }
+
+    /**
+     * Calculate distance in meters between 2 points
+     * @param loc1 start point
+     * @param loc2 finish point
+     * @return a distance in meters
+     */
+    public static double distanceInMeters(final Localizable loc1, final Localizable loc2) {
+        return distanceInMeters(loc1.getLatitude(), loc2.getLatitude(), loc1.getLongitude(), loc2.getLongitude(),
+                loc1.getAltitude(), loc2.getAltitude());
+    }
 }

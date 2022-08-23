@@ -1,16 +1,15 @@
 package ga.elirey.locationexplorer.utils;
 
-import ga.elirey.locationexplorer.model.GPSPoint;
+import ga.elirey.locationexplorer.basis.Localizable;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import ga.elirey.locationexplorer.basis.Localizable;
 
 import java.util.ArrayList;
 import java.util.List;
 
 @Slf4j
 @RequiredArgsConstructor
-public class RamerDouglasPeuckerAlgorithm<E extends Localizable> implements AlgorithmExecutor<E>{
+public class RamerDouglasPeuckerAlgorithm<E extends Localizable> implements AlgorithmExecutor<E> {
 
     private final int optimizationCoefficient;
 
@@ -38,11 +37,12 @@ public class RamerDouglasPeuckerAlgorithm<E extends Localizable> implements Algo
         double maxDistance = 0;
         int farthestPointIndex = 0;
 
-        for (final Localizable currentPoint : allPoints) {
+        for (int i = 0; i < allPoints.size(); i++) {
+            final Localizable currentPoint = allPoints.get(i);
             final double currentPointDistance = GeometryTools.getOrthogonalDistanceBetweenPointAndLine(currentPoint, firstPoint, lastPoint);
             if (currentPointDistance > maxDistance) {
                 maxDistance = currentPointDistance;
-                farthestPointIndex = allPoints.indexOf(currentPoint);
+                farthestPointIndex = i;
             }
         }
 
@@ -73,6 +73,7 @@ public class RamerDouglasPeuckerAlgorithm<E extends Localizable> implements Algo
         }
         return returnedValue;
     }
+
     private double calculateAccurateEpsilon(final List<E> allPoints) {
         log.debug("about to calculateAccurateEpsilon");
         if (allPoints.isEmpty()) {

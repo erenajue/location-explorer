@@ -19,6 +19,11 @@ import java.time.Instant;
 import java.util.*;
 import java.util.stream.Collectors;
 
+/**
+ * Implementation notes
+ * - Add all  the device being tracked using data from points (stream + distinct) to handle more than one
+ * device at a time. It will be useful for instance if the person switched devices (to be verified)
+ */
 @Getter
 @Setter
 @AllArgsConstructor
@@ -28,7 +33,6 @@ public class GPSTrack implements Traceable {
 
     private String trackedUser;
 
-    // TODO: Add all  the device being tracked using data from points (stream + distinct)
     @Singular("device")
     private List<String> trackingDevicesIds;
 
@@ -66,7 +70,6 @@ public class GPSTrack implements Traceable {
     @Override
     public String getDuration() {
 
-        // TODO: Improve
         Optional<GPSPoint> startPoint = this.getStartPoint();
         Optional<GPSPoint> endPoint = this.getEndPoint();
 
@@ -141,7 +144,6 @@ public class GPSTrack implements Traceable {
 
     private Feature asLineStringFeature() {
 
-        // TODO: Separate in distinct method then implement call to fill feature collection
         final LineString ls = new LineString();
         ls.setCoordinates(track.stream()
                 .map(GPSPoint::toLngLatAlt)
@@ -149,10 +151,21 @@ public class GPSTrack implements Traceable {
 
         final Feature lineFeature = new Feature();
         lineFeature.setGeometry(ls);
+
+        lineFeature.setProperties(buildProperties());
+        lineFeature.setId(UUID.randomUUID().toString());
+
+        return lineFeature;
+    }
+
+    /**
+     * Build the properties of geojson track
+     * @return the properties built from attributes and local methods
+     */
+    private Map<String, Object> buildProperties(){
+
         final Map<String, Object> properties = new HashMap<>();
 
-        // TODO: Regroup in one single stat-oriented object (use of @See SummaryStatistics for (stream) double object)
-        // TODO: Move these fields in other class
         double[] defaultPoint = {0.0, 0.0, 0.0};
         if (track.size() == 1) {
             GPSPoint lonePoint = track.get(0);
@@ -171,16 +184,14 @@ public class GPSTrack implements Traceable {
         properties.put("duration", this.getDuration());
         properties.put("travelledDistanceInMeters", this.getTravelledDistance());
 
-        lineFeature.setProperties(properties);
-        lineFeature.setId(UUID.randomUUID().toString());
-
-        return lineFeature;
+        return properties;
     }
 
+    /*
+    *
+    * * */
     @Override
     public GPX toGpxObject() {
-
-        // TODO: Add metadata to define the content of the GPX file
 
         // TODO: Change this when we will be able to organize track in segments (based on dates for instance)
         final TrackSegment uniqueSegment = TrackSegment.builder()
@@ -194,22 +205,11 @@ public class GPSTrack implements Traceable {
                 .addSegment(uniqueSegment)
                 .build();
 
-        // TODO: CHeck if this can be added as XML tags
-        final String description = String.format("%n startDate : %s", new Date(this.getStartDate().orElse(0)).toString())
-                .concat(String.format("%n endDate : %s", new Date(this.getEndDate().orElse(0)).toString()))
-                .concat(String.format("%n trackSize : %d", this.size()))
-                .concat(String.format("%n trackedDevices : %s", this.getTrackingDevicesIds().toArray()))
-                .concat(String.format("%n averageSpeed : %s", this.getAverageSpeed().orElse(0.0)))
-                .concat(String.format("%n averageHeading : %s", this.getAverageHeading().orElse(0.0)))
-                .concat(String.format("%n averageAccuracyInMeters : %s", this.getAverageAccuracy().orElse(10.0)))
-                .concat(String.format("%n duration : %s", this.getDuration()))
-                .concat(String.format("%n travelledDistanceInMeters : %s", this.getTravelledDistance()));
-
         return GPX.builder()
                 .creator(this.trackedUser)
                 .metadata(Metadata.builder()
                         .author(Person.of(this.trackedUser))
-                        .desc(description)
+                        .desc(buildPropertiesAsString())
                         .name(String.format("GPX traces of %s", this.trackedUser))
                         .time(Instant.now())
                         .build())
@@ -221,6 +221,19 @@ public class GPSTrack implements Traceable {
                         .map(GPSPoint::toGpxWayPoint)
                         .orElseThrow(InsufficientRequiredPointsException::new)) // get end point of sole point if there is any
                 .build();
+    }
+
+    private String buildPropertiesAsString(){
+
+        return  String.format("%n startDate : %s", new Date(this.getStartDate().orElse(0)))
+                .concat(String.format("%n endDate : %s", new Date(this.getEndDate().orElse(0))))
+                .concat(String.format("%n trackSize : %d", this.size()))
+                .concat(String.format("%n trackedDevices : %s", this.getTrackingDevicesIds().toArray()))
+                .concat(String.format("%n averageSpeed : %s", this.getAverageSpeed().orElse(0.0)))
+                .concat(String.format("%n averageHeading : %s", this.getAverageHeading().orElse(0.0)))
+                .concat(String.format("%n averageAccuracyInMeters : %s", this.getAverageAccuracy().orElse(10.0)))
+                .concat(String.format("%n duration : %s", this.getDuration()))
+                .concat(String.format("%n travelledDistanceInMeters : %s", this.getTravelledDistance()));
     }
 
     @Override
