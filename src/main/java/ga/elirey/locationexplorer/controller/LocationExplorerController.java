@@ -7,6 +7,8 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.web.bind.annotation.*;
 
+import java.util.Optional;
+
 @RestController
 @RequestMapping(value = "/locations")
 @RequiredArgsConstructor
@@ -22,6 +24,8 @@ public class LocationExplorerController {
                                           @RequestParam(value = "startDate", required = false, defaultValue = "0") final Long startDate,
                                           @RequestParam(value = "endDate", required = false, defaultValue = "0") final Long endDate,
                                           @RequestBody FilterOptions filterOptions) throws Exception {
-        return service.convert(user, context, format, startDate, endDate, filterOptions);
+
+        return service.convert(user, context, format, startDate, endDate, Optional.ofNullable(filterOptions)
+                .orElse(FilterOptions.useDefault()));
     }
 }

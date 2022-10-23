@@ -1,8 +1,7 @@
 package ga.elirey.locationexplorer.entity;
 
-import ga.elirey.locationexplorer.constant.UnitType;
 import lombok.*;
-import ga.elirey.locationexplorer.constant.LocationStatus;
+import ga.elirey.locationexplorer.format.LocationStatus;
 import org.hibernate.Hibernate;
 
 import javax.persistence.*;
@@ -57,14 +56,14 @@ public class UnitLocationMeasurement implements Serializable {
         @Column(name = "unit_id", nullable = false, updatable = false)
         private String unitId;
 
-        @Column(name = "mission_id", nullable = false, updatable = false)
-        private String missionId;
+        @Column(name = "context_id", nullable = false, updatable = false)
+        private String contextId;
 
         @Column(name = "time", columnDefinition = "timestamp", nullable = false, updatable = false)
         private LocalDateTime time;
 
-        @Column(name = "collecting_device_id", nullable = false, updatable = false)
-        private String collectingDeviceId;
+        @Column(name = "device_id", nullable = false, updatable = false)
+        private String deviceId;
 
 
         @Override
@@ -73,14 +72,14 @@ public class UnitLocationMeasurement implements Serializable {
             if (o == null || getClass() != o.getClass()) return false;
             Id id = (Id) o;
             return unitId.equals(id.unitId)
-                    && missionId.equals(id.missionId)
+                    && contextId.equals(id.contextId)
                     && time.equals(id.time)
-                    && collectingDeviceId.equals(id.collectingDeviceId);
+                    && deviceId.equals(id.deviceId);
         }
 
         @Override
         public int hashCode() {
-            return Objects.hash(unitId, missionId, time, collectingDeviceId);
+            return Objects.hash(unitId, contextId, time, deviceId);
         }
     }
 
